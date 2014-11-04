@@ -27,7 +27,7 @@ page.search('.result').each do |application|
   info_url = "http://online.bankstown.nsw.gov.au/Planning/Pages/XC.Track/SearchApplication.aspx?id=#{application_id}"
   record = {
     "council_reference" => application.search('a').first.inner_text,
-    "description" => application.children[4].inner_text,
+    "description" => application.children[4].inner_text.gsub("Development Application                            - ",""),
     "date_received" => Date.parse(more_data[2][0..9], 'd/m/Y').to_s,
     # TODO: There can be multiple addresses per application
     "address" => application.search("strong").first.inner_text.strip!,
@@ -42,9 +42,7 @@ page.search('.result').each do |application|
     record["on_notice_from"] = Date.parse(e.parent.at("LodgementDate").inner_text).to_s
     record["on_notice_to"] = Date.parse(e.parent.at("DateDue").inner_text).to_s
   end
-
-  pp record
-  
+ 
   if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
     ScraperWiki.save_sqlite(['council_reference'], record)
   else
