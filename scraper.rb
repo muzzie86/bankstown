@@ -1,50 +1,51 @@
 require 'scraperwiki'
+require 'mechanize'
 # Moved this scraper from https://github.com/openaustralia/planningalerts-parsers/blob/master/scrapers/bankstown_scraper.rb
 
 require 'open-uri'
 require 'nokogiri'
 
-#Bankstown expose an xml file already, but it is not compatable with what planningalerts expects
+url = "http://online.bankstown.nsw.gov.au/Planning/pages/xc.track/SearchApplication.aspx?o=html&d=lastmonth&k=LodgementDate&t=%23396&ss=a"
 
-# date_range can be any of {today,yesterday,thisweek,lastweek,thismonth,lastmonth}
-def applications_search(date_range)
-  base_url = "http://online.bankstown.nsw.gov.au/Planning/pages/xc.track/SearchApplication.aspx"
-  search_url = base_url + "?o=xml&d=#{date_range}&k=LodgementDate&t=#396"
-  #o=xml gives xml results rather than html (o=html)
-  #d=thismonth gives results with the date in the current month (also valid are today,yesterday,thisweek,lastweek,thismonth,lastmonth)
-  #k=LodgementDate searches for development applications based on date submitted, rather than date determined (k=DeterminationDate)
-  #t=396 searches for development applications
+agent = Mechanize.new
+page = agent.get(url)
+page.forms.first.submit
 
-  feed_data = open(search_url).read
-    
-  feed = Nokogiri::XML(feed_data)
-  fetched_applications = feed.search('Application')
-    
-  fetched_applications.map do |a|
-    record = {
-      'council_reference' => a.at('ReferenceNumber').inner_text,
-      # There was always a Line1 and Line 2 when I checked. I'm not sure if we should check for a Line3, or also work if there is no Line2.
-      'address' => a.at('Address/Line1').inner_text + ", " + a.at('Address/Line2').inner_text.rstrip, 
-      'description' => a.at('ApplicationDetails').inner_text,
-      # dates look like 2010-12-29T00:00:00+10:00
-      'date_received' => a.at('LodgementDate').inner_text.gsub(/T.*$/,""), 
-      'info_url' => base_url + "?id=" + a.at('ApplicationId').inner_text,
-      # Just use same as info_url
-      'comment_url' => base_url + "?id=" + a.at('ApplicationId').inner_text, 
-      'date_scraped' => Date.today.to_s
-    }
-    # I think this node of the XML file is only added after the application is determined. So depending on how oftern the scraper is run and if updates are allowed, this may or may not matter.
-    if a.at('Determination/Date')
-      record["on_notice_to"] = Date.parse(a.at('Determination/Date').inner_text).to_s
-    end
-    if ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? 
-      ScraperWiki.save_sqlite(['council_reference'], record)
-    else
-      puts "Skipping already saved record " + record['council_reference']
-    end
+page = agent.get(url)
 
+page.search('.result').each do |application|
+  # Skip multiple addresses
+  next unless application.search("strong").select{|x|x.inner_text != "Approved"}.length == 1
+
+  address = application.search("strong").first
+
+
+  more_data = application.children[10].inner_text.split("\r\n")
+  more_data[2].strip!
+  
+  application_id = application.search('a').first['href'].split('?').last
+  info_url = "http://online.bankstown.nsw.gov.au/Planning/Pages/XC.Track/SearchApplication.aspx?id=#{application_id}"
+  record = {
+    "council_reference" => application.search('a').first.inner_text,
+    "description" => application.children[4].inner_text.gsub("Development Application                            - ",""),
+    "date_received" => Date.parse(more_data[2][0..9], 'd/m/Y').to_s,
+    # TODO: There can be multiple addresses per application
+    "address" => application.search("strong").first.inner_text.strip!,
+    "date_scraped" => Date.today.to_s,
+    "info_url" => info_url,
+    # Can't find a specific url for commenting on applications.
+    "comment_url" => info_url,
+  }
+  # DA03NY1 appears to be the event code for putting this application on exhibition
+  e = application.search("Event EventCode").find{|e| e.inner_text.strip == "DA03NY1"}
+  if e
+    record["on_notice_from"] = Date.parse(e.parent.at("LodgementDate").inner_text).to_s
+    record["on_notice_to"] = Date.parse(e.parent.at("DateDue").inner_text).to_s
+  end
+ 
+  if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
+    ScraperWiki.save_sqlite(['council_reference'], record)
+  else
+    puts "Skipping already saved record " + record['council_reference']
   end
 end
-  
-applications_search('thismonth')
-applications_search('lastmonth')
