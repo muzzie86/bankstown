@@ -5,7 +5,7 @@ require 'mechanize'
 require 'open-uri'
 require 'nokogiri'
 
-url = "http://online.bankstown.nsw.gov.au/Planning/pages/xc.track/SearchApplication.aspx?o=html&d=lastmonth&k=LodgementDate&t=%23396&ss=a"
+url = "http://online.bankstown.nsw.gov.au/Planning/pages/xc.track/SearchApplication.aspx?o=html&d=thismonth&k=LodgementDate&t=%23396&ss=a"
 
 agent = Mechanize.new
 page = agent.get(url)
