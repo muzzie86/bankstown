@@ -25,7 +25,7 @@ page.search('.result').each do |application|
   more_data[2].strip!
   
   application_id = application.search('a').first['href'].split('?').last
-  info_url = "http://online.bankstown.nsw.gov.au/Planning/Pages/XC.Track/SearchApplication.aspx?id=#{application_id}"
+  info_url = "http://online.bankstown.nsw.gov.au/Planning/Pages/XC.Track/SearchApplication.aspx?#{application_id}"
   record = {
     "council_reference" => application.search('a').first.inner_text,
     "description" => application.children[4].inner_text.gsub("Development Application                            - ",""),
