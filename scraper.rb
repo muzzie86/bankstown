@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'scraperwiki'
 require 'mechanize'
 # Moved this scraper from https://github.com/openaustralia/planningalerts-parsers/blob/master/scrapers/bankstown_scraper.rb
