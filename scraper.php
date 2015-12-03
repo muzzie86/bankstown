@@ -7,8 +7,23 @@ require 'simple_html_dom.php';
 date_default_timezone_set('Australia/Sydney');
 
 $url_base = "http://eplanning.bankstown.nsw.gov.au";
-$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=thismonth";        # Use this URL to get 'This Month' submitted DA
-#$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=lastmonth";        # Use this URL to get 'Last Month' submitted DA
+
+    # Default to 'thisweek', use MORPH_PERIOD to change to 'thismonth' or 'lastmonth' for data recovery
+    switch(getenv('MORPH_PERIOD')) {
+        case 'thismonth' :
+            $period = 'thismonth';
+            break;
+        case 'lastmonth' :
+            $period = 'lastmonth';
+            break;
+        case 'thisweek' :
+        default         :
+            $period = 'thisweek';
+            break;
+    }
+
+$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=" .$period;
+
 
 $mainUrl = scraperWiki::scrape("$da_page");
 $dom = new simple_html_dom();
