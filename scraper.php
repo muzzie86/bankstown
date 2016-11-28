@@ -1,16 +1,31 @@
 <?php
 ### Bankstown City Council scraper
-
-require 'scraperwiki.php'; 
+require 'scraperwiki.php';
 require 'simple_html_dom.php';
 
 date_default_timezone_set('Australia/Sydney');
 
 $url_base = "http://eplanning.bankstown.nsw.gov.au";
-$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=thismonth";        # Use this URL to get 'This Month' submitted DA
-#$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=lastmonth";        # Use this URL to get 'Last Month' submitted DA
+$info_url = 'http://eplanning.bankstown.nsw.gov.au/ApplicationSearch/ApplicationSearchThroughApplicationNumber';
 
-$mainUrl = scraperWiki::scrape("$da_page");
+    # Default to 'thisweek', use MORPH_PERIOD to change to 'thismonth' or 'lastmonth' for data recovery
+    switch(getenv('MORPH_PERIOD')) {
+        case 'thismonth' :
+            $period = 'thismonth';
+            break;
+        case 'lastmonth' :
+            $period = 'lastmonth';
+            break;
+        case 'thisweek' :
+        default         :
+            $period = 'thisweek';
+            break;
+    }
+
+$da_page = $url_base . "/ApplicationSearch/ApplicationSearchThroughLodgedDate?day=" .$period;
+
+
+$mainUrl = scraperwiki::scrape("$da_page");
 $dom = new simple_html_dom();
 $dom->load($mainUrl);
 
@@ -24,7 +39,7 @@ for ($i=1; $i <= (count($dataset)/2)-1; $i++) {
     $date_received = explode(' ', trim($date_received[0]));
     $date_received = explode('/', trim($date_received[1]));
     $date_received = "$date_received[2]-$date_received[1]-$date_received[0]";
-    
+
     # Prep some data before hand
     $tempstr = explode('</h4>', $dataset[($i-1)*2]->innertext);
     $tempstr = explode('<br />', $tempstr[1]);
@@ -32,15 +47,15 @@ for ($i=1; $i <= (count($dataset)/2)-1; $i++) {
     $desc = explode(' - ', $desc);
     $desc = html_entity_decode($desc[1]);
     $addr = explode('</b>', $tempstr[1]);
-    $addr = substr(trim($addr[0]), 13);        
+    $addr = substr(trim($addr[0]), 13);
 
     # Put all information in an array
     $application = array (
         'council_reference' => trim($dom->find("td[width=85%] div a", $i-1)->plaintext),
-        'address' => $addr . "  AUSTRALIA",
+        'address' => $addr,
         'description' => $desc,
-        'info_url' => $url_base . trim($dom->find("td[width=85%] div a", $i-1)->href),
-        'comment_url' => $url_base . trim($dom->find("td[width=85%] div a", $i-1)->href),
+        'info_url' => $info_url,
+        'comment_url' => $info_url,
         'date_scraped' => date('Y-m-d'),
         'date_received' => date('Y-m-d', strtotime($date_received))
     );
