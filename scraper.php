@@ -5,8 +5,8 @@ require 'simple_html_dom.php';
 
 date_default_timezone_set('Australia/Sydney');
 
-$url_base = "http://eplanning.bankstown.nsw.gov.au";
-$info_url = 'http://eplanning.bankstown.nsw.gov.au/ApplicationSearch/ApplicationSearchThroughApplicationNumber';
+$url_base = "http://eplanning.cbcity.nsw.gov.au";
+$info_url = 'http://eplanning.cbcity.nsw.gov.au/ApplicationSearch/ApplicationSearchThroughApplicationNumber';
 
     # Default to 'thisweek', use MORPH_PERIOD to change to 'thismonth' or 'lastmonth' for data recovery
     switch(getenv('MORPH_PERIOD')) {
