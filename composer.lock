@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78c5697b2fea90751d46b30c0d4812a7",
+    "content-hash": "9c3cb80a2b4bb7de431c6073c34ae7c8",
     "packages": [
         {
             "name": "openaustralia/scraperwiki",
@@ -30,7 +30,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.1.0",
+        "php": "~7.1.0",
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*",
         "ext-gd": "*",
