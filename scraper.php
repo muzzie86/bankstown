@@ -36,7 +36,7 @@ $dataset = $dom->find("td[width=85%] div");
 for ($i=1; $i <= (count($dataset)/2)-1; $i++) {
     # Slow way to transform the date but it works
     $date_received = explode('<br />', $dom->find("td[width=85%] div div", ($i-1))->innertext);
-    $date_received = explode(' ', trim($date_received[0]));
+    $date_received = explode('</span>', trim($date_received[0]));
     $date_received = explode('/', trim($date_received[1]));
     $date_received = "$date_received[2]-$date_received[1]-$date_received[0]";
 
